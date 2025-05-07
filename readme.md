@@ -70,7 +70,7 @@ year          = {2023},
   ```
   cd docker/
   docker pull wenbowen123/foundationpose && docker tag wenbowen123/foundationpose foundationpose  # Or to build from scratch: docker build --network host -t foundationpose .
-  bash docker/run_container.sh
+  bash run_container.sh
   ```
 
 
@@ -84,7 +84,7 @@ Later you can execute into the container without re-build.
 docker exec -it foundationpose bash
 ```
 
-For more recent GPU such as 4090, refer to [this](https://github.com/NVlabs/FoundationPose/issues/27).
+For more recent GPU such as 4090 (For ManipPC), refer to [this](https://github.com/NVlabs/FoundationPose/issues/27).
 In short, do the following:
 ```
 docker pull shingarey/foundationpose_custom_cuda121:latest

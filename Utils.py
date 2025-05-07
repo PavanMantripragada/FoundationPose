@@ -1018,3 +1018,77 @@ def make_yaml_dumpable(D):
         D[d][i] = make_yaml_dumpable(D[d][i])
       continue
   return dict(D)
+
+def compute_orientation_errors(pred_poses, gt_poses):
+    from scipy.spatial.transform import Rotation as R
+    """
+    Compute the mean and standard deviation of orientation errors in roll, pitch, yaw.
+    
+    Args:
+        pred_poses (np.ndarray): Predicted poses of shape (N, 4, 4).
+        gt_poses (np.ndarray): Ground truth poses of shape (N, 4, 4).
+        
+    Returns:
+        dict: Mean and standard deviation of roll, pitch, and yaw errors.
+    """
+    assert pred_poses.shape == gt_poses.shape, "Predicted and GT poses must have the same shape"
+    assert pred_poses.shape[1:] == (4, 4), "Poses must be (N, 4, 4) transformation matrices"
+    
+    N = pred_poses.shape[0]
+    errors = np.zeros((N, 3))  # Store errors in roll, pitch, yaw
+    
+    for i in range(N):
+        pred_rot = R.from_matrix(pred_poses[i, :3, :3])  # Extract rotation matrix
+        gt_rot = R.from_matrix(gt_poses[i, :3, :3])
+        
+        error_rot = gt_rot.inv() * pred_rot  # Compute relative rotation
+        roll, pitch, yaw = error_rot.as_euler('xyz', degrees=True)  # Convert to roll, pitch, yaw errors
+        errors[i] = [abs(roll), abs(pitch), abs(yaw)]
+    
+    mean_errors = np.mean(errors, axis=0)
+    std_errors = np.std(errors, axis=0)
+    
+    return {
+        "mean_roll_error": mean_errors[0],
+        "std_roll_error": std_errors[0],
+        "mean_pitch_error": mean_errors[1],
+        "std_pitch_error": std_errors[1],
+        "mean_yaw_error": mean_errors[2],
+        "std_yaw_error": std_errors[2],
+    }
+
+def compute_position_errors(pred_poses, gt_poses):
+  """
+  Compute the mean and standard deviation of position errors in x, y, z coordinates.
+  
+  Args:
+    pred_poses (np.ndarray): Predicted poses of shape (N, 4, 4).
+    gt_poses (np.ndarray): Ground truth poses of shape (N, 4, 4).
+    
+  Returns:
+    dict: Mean and standard deviation of position errors in x, y, z coordinates.
+  """
+  assert pred_poses.shape == gt_poses.shape, "Predicted and GT poses must have the same shape"
+  assert pred_poses.shape[1:] == (4, 4), "Poses must be (N, 4, 4) transformation matrices"
+  
+  N = pred_poses.shape[0]
+  errors = np.zeros((N, 3))  # Store errors in x, y, z coordinates
+  
+  for i in range(N):
+    pred_pos = pred_poses[i, :3, 3]  # Extract translation vector
+    gt_pos = gt_poses[i, :3, 3]
+    
+    error_pos = gt_pos - pred_pos  # Compute position error
+    errors[i] = np.abs(error_pos)
+  
+  mean_errors = np.mean(errors, axis=0)
+  std_errors = np.std(errors, axis=0)
+  
+  return {
+    "mean_x_error": mean_errors[0],
+    "std_x_error": std_errors[0],
+    "mean_y_error": mean_errors[1],
+    "std_y_error": std_errors[1],
+    "mean_z_error": mean_errors[2],
+    "std_z_error": std_errors[2],
+  }

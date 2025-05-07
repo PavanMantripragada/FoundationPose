@@ -48,7 +48,8 @@ class FoundationPose:
     if mesh is not None:
       self.mesh_ori = mesh.copy()
       mesh = mesh.copy()
-      mesh.vertices = mesh.vertices - self.model_center.reshape(1,3)
+      self.mesh = trimesh.Trimesh(vertices=mesh.vertices - self.model_center.reshape(1, 3), faces=mesh.faces)
+      # mesh.vertices = mesh.vertices - self.model_center.reshape(1,3)
 
     model_pts = mesh.vertices
     self.diameter = compute_mesh_diameter(model_pts=mesh.vertices, n_sample=10000)
